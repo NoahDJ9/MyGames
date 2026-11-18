@@ -1,0 +1,461 @@
+<!DOCTYPE html>
+<html lang="de">
+<head>
+<meta charset="UTF-8">
+<meta name="viewport" content="width=device-width, initial-scale=1">
+<title>Backlog – Steam-Spiele</title>
+<style>
+:root{
+  --bg:#121212;--card:#1e1e1e;--card2:#262626;--line:#2e2e2e;
+  --text:#ececec;--mute:#9a9aa5;--accent:#9b6bff;--accent2:#5b7cff;
+}
+*{box-sizing:border-box;margin:0}
+body{background:var(--bg);color:var(--text);font:15px/1.45 "Segoe UI",system-ui,-apple-system,sans-serif;min-height:100vh}
+button,input,select{font:inherit;color:inherit}
+:focus-visible{outline:2px solid var(--accent);outline-offset:2px}
+header{display:flex;align-items:center;justify-content:space-between;gap:12px;flex-wrap:wrap;
+  padding:16px 28px;border-bottom:1px solid var(--line);position:sticky;top:0;background:rgba(18,18,18,.92);backdrop-filter:blur(8px);z-index:5}
+.logo{font-weight:700;font-size:18px;color:var(--accent)}
+.hbtns{display:flex;gap:8px}
+.btn{background:var(--card);border:1px solid var(--line);border-radius:8px;padding:8px 14px;cursor:pointer;transition:.15s}
+.btn:hover{border-color:var(--accent);color:#fff}
+.btn.primary{background:linear-gradient(135deg,var(--accent),var(--accent2));border:0;font-weight:600;color:#fff}
+.btn.primary:hover{filter:brightness(1.12)}
+.btn.danger:hover{border-color:#e5484d;color:#ff8083}
+main{max-width:1180px;margin:0 auto;padding:24px 28px 60px}
+.add{background:var(--card);border:1px solid var(--line);border-radius:12px;padding:18px;margin-bottom:26px}
+.add h2{font-size:15px;margin-bottom:12px}
+.row{display:flex;gap:10px;flex-wrap:wrap;align-items:center}
+input[type=text],select{background:var(--bg);border:1px solid var(--line);border-radius:8px;padding:9px 12px;min-width:0}
+input[type=text]:focus,select:focus{border-color:var(--accent);outline:none}
+#in-link,#search{width:100%}
+.chips{display:flex;gap:6px;flex-wrap:wrap}
+.chip{background:var(--bg);border:1px solid var(--line);border-radius:999px;padding:4px 12px;font-size:13px;cursor:pointer;color:var(--mute);transition:.15s;user-select:none}
+.chip{--c:var(--accent)}
+.chip.cat::before{content:"";display:inline-block;width:8px;height:8px;border-radius:50%;background:var(--c);margin-right:7px}
+.chip:hover{color:#fff;border-color:var(--c)}
+.chip.on{background:color-mix(in srgb,var(--c) 20%,transparent);border-color:var(--c);color:color-mix(in srgb,var(--c) 70%,#fff)}
+.hint{color:var(--mute);font-size:13px;margin-top:8px}
+.filters{display:flex;flex-direction:column;gap:12px;margin-bottom:22px}
+.filters .row{justify-content:space-between}
+.sw{position:relative;flex:1 1 220px;max-width:420px}
+.sw.wide{flex:1 1 320px;max-width:none}
+.drop{position:absolute;top:calc(100% + 6px);left:0;right:0;background:var(--card);border:1px solid var(--line);border-radius:10px;box-shadow:0 12px 30px rgba(0,0,0,.6);z-index:1000;max-height:420px;overflow:auto;display:none}
+.drop.open{display:block}
+.opt{display:flex;gap:10px;align-items:center;padding:8px 10px;cursor:pointer}
+.opt.act,.opt:hover{background:var(--card2)}
+.opt img,.opt .mini{width:72px;height:34px;object-fit:cover;border-radius:5px;flex:none;background:#2a2440}
+.opt .t{flex:1;min-width:0;white-space:nowrap;overflow:hidden;text-overflow:ellipsis}
+.opt small{color:var(--mute);font-size:12px;white-space:nowrap}
+.dnote{padding:8px 12px;color:var(--mute);font-size:12px}
+#drop-my{right:auto;width:min(600px,92vw)}
+.dh{display:flex;justify-content:space-between;align-items:center;padding:10px 12px 4px;font-size:12px;font-weight:600;color:var(--mute);position:sticky;top:0;background:var(--card)}
+.dh+.opt,.dh+.dnote{border-top:0}
+.opt .t small{display:block;margin-top:1px}
+.opt .lnk{color:var(--mute);font-size:12px;text-decoration:none;white-space:nowrap}
+.opt .lnk:hover{color:var(--accent)}
+.addb{background:linear-gradient(135deg,var(--accent),var(--accent2));border:0;border-radius:7px;padding:5px 10px;font-size:12px;font-weight:600;color:#fff;cursor:pointer;white-space:nowrap}
+.addb:hover{filter:brightness(1.15)}
+.sbadge{background:var(--card2);border-radius:5px;padding:2px 8px;font-size:12px;white-space:nowrap;color:#b9b9c4}
+.sbadge.now{color:#9db4ff}.sbadge.done{color:#5fe0a5}
+.spin{width:14px;height:14px;border:2px solid var(--line);border-top-color:var(--accent);border-radius:50%;animation:sp .7s linear infinite}
+@keyframes sp{to{transform:rotate(360deg)}}
+.opt+.dnote{border-top:1px solid var(--line)}
+@keyframes flash{0%,100%{box-shadow:none}30%{box-shadow:0 0 0 3px var(--accent)}}
+.game.flash{animation:flash 1.6s}
+.count{color:var(--mute);font-size:13px}
+.grid{display:grid;grid-template-columns:repeat(auto-fill,minmax(260px,1fr));gap:18px}
+.game{background:var(--card);border:1px solid var(--line);border-radius:12px;overflow:hidden;display:flex;flex-direction:column;
+  transition:transform .18s,box-shadow .18s,border-color .18s}
+.game:hover{transform:translateY(-4px);border-color:rgba(155,107,255,.6);box-shadow:0 10px 28px rgba(0,0,0,.5)}
+.cover{position:relative;aspect-ratio:460/215;background:linear-gradient(135deg,#2a2440,#1b2140);display:grid;place-items:center;overflow:hidden}
+.cover img{width:100%;height:100%;object-fit:cover;display:block;transition:transform .3s}
+.game:hover .cover img{transform:scale(1.04)}
+.cover .ph{font-size:34px;opacity:.5}
+.tools{position:absolute;top:8px;right:8px;display:flex;gap:6px;opacity:0;transition:.15s}
+.game:hover .tools,.game:focus-within .tools{opacity:1}
+.tools button{width:30px;height:30px;border-radius:8px;border:0;background:rgba(18,18,18,.85);cursor:pointer}
+.tools button:hover{background:var(--accent)}
+.tools button.del:hover{background:#e5484d}
+.body{padding:12px 14px 14px;display:flex;flex-direction:column;gap:8px;flex:1}
+.title{font-weight:700;font-size:16px;line-height:1.25}
+.title a{color:inherit;text-decoration:none}.title a:hover{color:var(--accent)}
+.badges{display:flex;gap:5px;flex-wrap:wrap}
+.badge{--c:#9a9aa5;background:color-mix(in srgb,var(--c) 18%,transparent);border-radius:5px;padding:2px 8px;font-size:12px;font-weight:600;color:color-mix(in srgb,var(--c) 75%,#fff)}
+.status{margin-top:auto;border:1px solid var(--line);background:var(--bg);border-radius:8px;padding:6px 10px;font-size:13px;cursor:pointer;width:100%}
+.s-todo{border-left:3px solid #8a8a95}.s-now{border-left:3px solid var(--accent2)}.s-done{border-left:3px solid #3ecf8e}
+.empty{grid-column:1/-1;text-align:center;color:var(--mute);padding:50px 0}
+dialog{background:var(--card);color:var(--text);border:1px solid var(--line);border-radius:14px;padding:22px;width:min(480px,92vw);margin:auto}
+dialog::backdrop{background:rgba(0,0,0,.65)}
+dialog h2{font-size:17px;margin-bottom:14px}
+dialog .row{margin-bottom:12px}
+dialog input[type=text],dialog select{width:100%}
+.toast{position:fixed;bottom:20px;left:50%;transform:translateX(-50%) translateY(20px);background:var(--card2);border:1px solid var(--accent);
+  padding:10px 18px;border-radius:10px;opacity:0;pointer-events:none;transition:.25s}
+.toast.show{opacity:1;transform:translateX(-50%)}
+@media (prefers-reduced-motion:reduce){*{transition:none!important}}
+@media(max-width:560px){header,main{padding-left:16px;padding-right:16px}.tools{opacity:1}}
+</style>
+</head>
+<body>
+<header>
+  <div class="logo">🎮 Mein Backlog</div>
+  <div class="hbtns">
+    <button class="btn" id="btn-export">Export</button>
+    <button class="btn" id="btn-import">Import</button>
+    <input type="file" id="file" accept="application/json" hidden>
+  </div>
+</header>
+
+<main>
+  <section class="add">
+    <h2>Spiel hinzufügen</h2>
+    <div class="row">
+      <div class="sw wide"><input type="text" id="in-link" placeholder="Steam-Link oder Spielname tippen …" autocomplete="off"><div class="drop" id="drop-add" role="listbox"></div></div>
+      <select id="in-status" aria-label="Status"></select>
+      <button class="btn primary" id="btn-add">Hinzufügen</button>
+    </div>
+    <div class="chips" id="add-cats" style="margin-top:12px"></div>
+    <p class="hint">Beim Tippen schlägt die App Spiele von Steam vor (mit Cover und App-ID). Alternativ funktioniert ein eingefügter Steam-Link oder ein freier Name.</p>
+  </section>
+
+  <section class="filters">
+    <div class="row">
+      <div class="sw"><input type="text" id="search" placeholder="In deiner Liste & auf Steam suchen …" aria-label="Suche" autocomplete="off"><div class="drop" id="drop-my" role="listbox"></div></div>
+      <span class="count" id="count"></span>
+    </div>
+    <div class="chips" id="f-cats"></div>
+    <div class="chips" id="f-status"></div>
+  </section>
+
+  <div class="grid" id="grid"></div>
+</main>
+
+<dialog id="dlg">
+  <h2>Eintrag bearbeiten</h2>
+  <div class="row"><input type="text" id="e-title" placeholder="Titel"></div>
+  <div class="row"><input type="text" id="e-link" placeholder="Steam-Link (optional)"></div>
+  <div class="row"><select id="e-status"></select></div>
+  <div class="chips" id="e-cats" style="margin-bottom:16px"></div>
+  <div class="row" style="justify-content:flex-end;margin:0">
+    <button class="btn" id="e-cancel">Abbrechen</button>
+    <button class="btn primary" id="e-save">Speichern</button>
+  </div>
+</dialog>
+<div class="toast" id="toast"></div>
+
+<script>
+const CATS=["Singleplayer","2-Spieler Koop","Mehrspieler Koop","Simulator","Cozy","Horror","Story"];
+const CATCOLOR={"Singleplayer":"#5b9dff","2-Spieler Koop":"#ff7ab8","Mehrspieler Koop":"#ff9f43","Simulator":"#2ed3a0","Cozy":"#f4c95d","Horror":"#ff5555","Story":"#b388ff"};
+const STATUS={todo:"Noch spielen",now:"Gerade dran",done:"Durchgespielt"};
+const KEY="steam-backlog-v1";
+let games=load(), fCats=new Set(), fStatus="", query="", addCats=new Set(), editCats=new Set(), editId=null;
+const $=id=>document.getElementById(id);
+
+function load(){try{return JSON.parse(localStorage.getItem(KEY))||[]}catch(e){return[]}}
+function save(){try{localStorage.setItem(KEY,JSON.stringify(games))}catch(e){toast("Speichern im Browser nicht möglich")}}
+function toast(t){const el=$("toast");el.textContent=t;el.classList.add("show");clearTimeout(toast.t);toast.t=setTimeout(()=>el.classList.remove("show"),2200)}
+function esc(s){return String(s).replace(/[&<>"']/g,c=>({"&":"&amp;","<":"&lt;",">":"&gt;",'"':"&quot;","'":"&#39;"}[c]))}
+
+function parseSteam(v){
+  const m=String(v).match(/store\.steampowered\.com\/app\/(\d+)(?:\/([^/?#]+))?/i);
+  if(!m)return null;
+  const name=m[2]?decodeURIComponent(m[2]).replace(/_/g," "):"";
+  return{appId:m[1],name};
+}
+const cover=id=>`https://shared.akamai.steamstatic.com/store_item_assets/steam/apps/${id}/header.jpg`;
+const coverAlt=id=>`https://cdn.cloudflare.steamstatic.com/steam/apps/${id}/header.jpg`;
+function coverFail(img){
+  if(!img.dataset.f&&img.dataset.alt){img.dataset.f=1;img.src=img.dataset.alt;return}
+  img.onerror=null;
+  if(img.closest(".cover")){const sp=document.createElement("span");sp.className="ph";sp.textContent="🎮";img.replaceWith(sp)}
+  else img.style.visibility="hidden";
+}
+
+function chips(el,set,onChange,list=CATS){
+  el.innerHTML=list.map(c=>`<span class="chip cat${set.has(c)?" on":""}" style="--c:${CATCOLOR[c]}" tabindex="0" role="button" data-c="${esc(c)}">${esc(c)}</span>`).join("");
+  el.querySelectorAll(".chip").forEach(ch=>{
+    const t=()=>{const c=ch.dataset.c;set.has(c)?set.delete(c):set.add(c);onChange()};
+    ch.onclick=t;ch.onkeydown=e=>{if(e.key==="Enter"||e.key===" "){e.preventDefault();t()}};
+  });
+}
+const statusOpts=(sel)=>Object.entries(STATUS).map(([k,v])=>`<option value="${k}"${k===sel?" selected":""}>${v}</option>`).join("");
+
+function renderAddChips(){chips($("add-cats"),addCats,renderAddChips)}
+function renderFilters(){
+  chips($("f-cats"),fCats,()=>{renderFilters();render()});
+  const st=$("f-status");
+  const items=[["","Alle Status"],...Object.entries(STATUS)];
+  st.innerHTML=items.map(([k,v])=>`<span class="chip${fStatus===k?" on":""}" tabindex="0" role="button" data-s="${k}">${v}</span>`).join("");
+  st.querySelectorAll(".chip").forEach(ch=>{
+    const t=()=>{fStatus=ch.dataset.s;renderFilters();render()};
+    ch.onclick=t;ch.onkeydown=e=>{if(e.key==="Enter"||e.key===" "){e.preventDefault();t()}};
+  });
+}
+
+function render(){
+  const q=query.toLowerCase();
+  const list=games.filter(g=>
+    (!q||g.title.toLowerCase().includes(q)) &&
+    (!fStatus||g.status===fStatus) &&
+    [...fCats].every(c=>g.cats.includes(c))
+  );
+  $("count").textContent=`${list.length} von ${games.length} Spielen`;
+  $("grid").innerHTML=list.length?list.map(g=>`
+    <article class="game" data-id="${g.id}">
+      <div class="cover">
+        ${g.appId?`<img src="${cover(g.appId)}" data-alt="${coverAlt(g.appId)}" alt="Cover von ${esc(g.title)}" loading="lazy" onerror="coverFail(this)">`:`<span class="ph">🎮</span>`}
+        <div class="tools">
+          <button data-a="edit" title="Bearbeiten" aria-label="Bearbeiten">✎</button>
+          <button class="del" data-a="del" title="Löschen" aria-label="Löschen">🗑</button>
+        </div>
+      </div>
+      <div class="body">
+        <div class="title">${g.appId?`<a href="https://store.steampowered.com/app/${g.appId}/" target="_blank" rel="noopener">${esc(g.title)}</a>`:esc(g.title)}</div>
+        <div class="badges">${g.cats.map(c=>`<span class="badge" style="--c:${CATCOLOR[c]||"#9a9aa5"}">${esc(c)}</span>`).join("")}</div>
+        <select class="status s-${g.status}" data-a="status" aria-label="Status">${statusOpts(g.status)}</select>
+      </div>
+    </article>`).join(""):
+    `<div class="empty">${games.length?"Keine Treffer für diese Filter.":"Noch keine Spiele. Füge oben dein erstes Spiel hinzu."}</div>`;
+}
+
+$("grid").addEventListener("click",e=>{
+  const b=e.target.closest("button[data-a]");if(!b)return;
+  const id=b.closest(".game").dataset.id;
+  if(b.dataset.a==="del"){
+    const g=games.find(x=>x.id===id);
+    if(confirm(`„${g.title}“ wirklich löschen?`)){games=games.filter(x=>x.id!==id);save();render();toast("Gelöscht")}
+  }else openEdit(id);
+});
+$("grid").addEventListener("change",e=>{
+  if(e.target.dataset.a!=="status")return;
+  const g=games.find(x=>x.id===e.target.closest(".game").dataset.id);
+  g.status=e.target.value;save();render();
+});
+
+function addGame(){
+  const raw=$("in-link").value.trim();
+  if(!raw){toast("Bitte Link oder Namen eingeben");return}
+  const s=parseSteam(raw)||(picked&&picked.title===raw?{appId:picked.appId,name:picked.title}:null);
+  if(!s&&/^https?:\/\//i.test(raw)){toast("Das ist kein Steam-Shop-Link");return}
+  const title=s?(s.name||`Steam-App ${s.appId}`):raw;
+  if(s&&games.some(g=>g.appId===s.appId)){toast("Das Spiel ist schon in deiner Liste");return}
+  games.unshift({id:crypto.randomUUID?crypto.randomUUID():String(Date.now()+Math.random()),
+    title,appId:s?s.appId:null,cats:CATS.filter(c=>addCats.has(c)),status:$("in-status").value});
+  save();render();
+  $("in-link").value="";picked=null;addDrop.close();addCats.clear();renderAddChips();
+  toast(`„${title}“ hinzugefügt`);
+}
+$("btn-add").onclick=addGame;
+
+/* ---------- Dropdown-Helfer ---------- */
+function makeDrop(input,drop,onPick){
+  let items=[],idx=-1;
+  function close(){drop.classList.remove("open");idx=-1}
+  function show(list,note){
+    items=list;idx=-1;
+    if(!list.length&&!note){close();return}
+    drop.innerHTML=list.map((it,i)=>`<div class="opt" role="option" data-i="${i}">${it.img?`<img src="${it.img}" data-alt="${it.alt||""}" alt="" loading="lazy" onerror="coverFail(this)">`:'<span class="mini"></span>'}<span class="t">${esc(it.title)}</span><small>${esc(it.sub||"")}</small></div>`).join("")+(note?`<div class="dnote">${esc(note)}</div>`:"");
+    drop.classList.add("open");
+  }
+  function pick(i){const it=items[i];close();if(it)onPick(it.data)}
+  function mark(){drop.querySelectorAll(".opt").forEach((o,i)=>{o.classList.toggle("act",i===idx);if(i===idx)o.scrollIntoView({block:"nearest"})})}
+  drop.addEventListener("mousedown",e=>{const o=e.target.closest(".opt");if(!o)return;e.preventDefault();pick(+o.dataset.i)});
+  input.addEventListener("keydown",e=>{
+    if(!drop.classList.contains("open")||!items.length)return;
+    if(e.key==="ArrowDown"){e.preventDefault();idx=Math.min(idx+1,items.length-1);mark()}
+    else if(e.key==="ArrowUp"){e.preventDefault();idx=Math.max(idx-1,0);mark()}
+    else if(e.key==="Escape"){close()}
+    else if(e.key==="Enter"&&idx>=0){e.preventDefault();pick(idx)}
+  });
+  input.addEventListener("blur",()=>setTimeout(close,120));
+  return{show,close};
+}
+
+/* ---------- Kombinierte Live-Suche (Hauptleiste) ---------- */
+const mainIn=$("search"),mainDrop=$("drop-my");
+const liveCache=new Map();
+let mainState={q:"",live:[],loading:false,err:false},mainIdx=-1,mainSeq=0,mainTimer,mainCtl;
+
+async function cheapShark(term,signal){
+  const r=await fetch("https://www.cheapshark.com/api/1.0/games?title="+encodeURIComponent(term)+"&limit=15",{signal});
+  if(!r.ok)throw new Error("http");
+  const d=await r.json(),seen=new Set(),out=[];
+  for(const i of d){
+    const id=i&&i.steamAppID?String(i.steamAppID):"";
+    if(!/^\d+$/.test(id)||seen.has(id))continue;
+    seen.add(id);out.push({appId:id,title:i.external});
+  }
+  return out;
+}
+const sbadge=g=>`<span class="sbadge ${g.status}">${STATUS[g.status]}</span>`;
+const thumb=(id)=>id?`<img src="${cover(id)}" data-alt="${coverAlt(id)}" alt="" loading="lazy" onerror="coverFail(this)">`:'<span class="mini"></span>';
+
+function renderMain(){
+  const q=mainState.q;
+  if(!q){mainDrop.classList.remove("open");return}
+  const ql=q.toLowerCase();
+  const mine=games.filter(g=>g.title.toLowerCase().includes(ql)).slice(0,6);
+  let h=`<div class="dh"><span>In deiner Liste</span><span>${mine.length}</span></div>`;
+  h+=mine.length?mine.map(g=>`<div class="opt" role="option" data-k="my" data-id="${esc(g.id)}">${thumb(g.appId)}<span class="t">${esc(g.title)}</span>${sbadge(g)}</div>`).join(""):'<div class="dnote">Kein Treffer in deiner Liste</div>';
+  h+=`<div class="dh"><span>Live auf Steam gefunden</span>${mainState.loading?'<span class="spin" role="status" aria-label="Lädt"></span>':`<span>${mainState.live.length}</span>`}</div>`;
+  if(q.length<2)h+='<div class="dnote">Gib mindestens 2 Zeichen ein</div>';
+  else if(mainState.err)h+='<div class="dnote">Steam-Suche gerade nicht erreichbar. Versuche es gleich noch einmal.</div>';
+  else if(mainState.live.length)h+=mainState.live.map(p=>{
+    const has=games.some(g=>g.appId===p.appId);
+    return `<div class="opt" role="option" data-k="live" data-id="${p.appId}" data-title="${esc(p.title)}">${thumb(p.appId)}<span class="t">${esc(p.title)}<small>App-ID ${p.appId}</small></span><a class="lnk" href="https://store.steampowered.com/app/${p.appId}/" target="_blank" rel="noopener">Steam-Shop</a>${has?'<span class="sbadge">In Liste</span>':'<button type="button" class="addb" data-add>+ Zur Liste</button>'}</div>`;
+  }).join("");
+  else if(!mainState.loading)h+='<div class="dnote">Keine Steam-Treffer</div>';
+  mainDrop.innerHTML=h;
+  mainDrop.classList.add("open");
+  markMain();
+}
+function markMain(){
+  mainDrop.querySelectorAll(".opt").forEach((o,i)=>{o.classList.toggle("act",i===mainIdx);if(i===mainIdx)o.scrollIntoView({block:"nearest"})});
+}
+function mainInput(){
+  const q=mainIn.value.trim();
+  mainState.q=q;mainState.err=false;mainIdx=-1;
+  clearTimeout(mainTimer);if(mainCtl)mainCtl.abort();
+  const seq=++mainSeq;
+  if(q.length<2){mainState.live=[];mainState.loading=false;renderMain();return}
+  const key=q.toLowerCase();
+  if(liveCache.has(key)){mainState.live=liveCache.get(key);mainState.loading=false;renderMain();return}
+  mainState.live=[];mainState.loading=true;renderMain();
+  mainTimer=setTimeout(async()=>{
+    const ctl=mainCtl=new AbortController(),to=setTimeout(()=>ctl.abort(),7000);
+    try{
+      const r=await cheapShark(q,ctl.signal);
+      if(seq!==mainSeq)return;
+      liveCache.set(key,r);mainState.live=r;
+    }catch(e){if(seq===mainSeq)mainState.err=true}
+    finally{clearTimeout(to);if(seq===mainSeq){mainState.loading=false;renderMain()}}
+  },250);
+}
+function addLive(appId,title){
+  if(games.some(g=>g.appId===appId)){toast("Schon in deiner Liste");return}
+  games.unshift({id:crypto.randomUUID?crypto.randomUUID():String(Date.now()+Math.random()),title,appId,cats:[],status:"todo"});
+  save();render();toast(`„${title}“ hinzugefügt`);renderMain();
+}
+function focusGame(id){
+  query="";mainIn.value="";mainState.q="";fCats.clear();fStatus="";renderFilters();render();
+  const el=document.querySelector(`.game[data-id="${CSS.escape(id)}"]`);
+  if(!el)return;
+  el.scrollIntoView({behavior:"smooth",block:"center"});
+  el.classList.add("flash");setTimeout(()=>el.classList.remove("flash"),1700);
+}
+function pickRow(row){
+  if(!row)return;
+  if(row.dataset.k==="my"){mainDrop.classList.remove("open");focusGame(row.dataset.id)}
+  else addLive(row.dataset.id,row.dataset.title);
+}
+mainIn.addEventListener("input",mainInput);
+mainIn.addEventListener("focus",mainInput);
+mainIn.addEventListener("blur",()=>setTimeout(()=>mainDrop.classList.remove("open"),150));
+mainIn.addEventListener("keydown",e=>{
+  if(!mainDrop.classList.contains("open"))return;
+  const rows=[...mainDrop.querySelectorAll(".opt")];
+  if(e.key==="ArrowDown"&&rows.length){e.preventDefault();mainIdx=Math.min(mainIdx+1,rows.length-1);markMain()}
+  else if(e.key==="ArrowUp"&&rows.length){e.preventDefault();mainIdx=Math.max(mainIdx-1,0);markMain()}
+  else if(e.key==="Escape"){mainDrop.classList.remove("open")}
+  else if(e.key==="Enter"&&mainIdx>=0){e.preventDefault();pickRow(rows[mainIdx])}
+});
+mainDrop.addEventListener("mousedown",e=>e.preventDefault());
+mainDrop.addEventListener("click",e=>{
+  if(e.target.closest("a"))return;
+  const row=e.target.closest(".opt");if(!row)return;
+  if(row.dataset.k==="my")pickRow(row);
+  else if(e.target.closest("[data-add]"))pickRow(row);
+});
+
+/* ---------- Vorschläge beim Hinzufügen ---------- */
+/* Lokale Fallback-Liste (App-IDs bitte bei Bedarf über den Steam-Link prüfen) */
+const LOCAL=[
+["RV There Yet?",3949040],["Chained Together",2567870],["Content Warning",2881650],["Lethal Company",1966720],
+["R.E.P.O.",3241660],["Peak",3527290],["Schedule I",3164500],["Phasmophobia",739630],["Buckshot Roulette",2835570],
+["Inscryption",1092790],["Cuphead",268910],["Stardew Valley",413150],["It Takes Two",1426210],["Overcooked! 2",728880],
+["Human Fall Flat",477160],["Gang Beasts",285900],["Pummel Party",880940],["Getting Over It with Bennett Foddy",240720],
+["Only Up!",2216750],["WEBFISHING",3146520],["Dave the Diver",1868140],["Cult of the Lamb",1313140],
+["Don't Starve Together",322330],["Raft",648800],["Subnautica",264710],["Outlast",238320],
+["PowerWash Simulator",1290000],["House Flipper",613100],["Supermarket Simulator",2670630]
+].map(([title,appId])=>({title,appId:String(appId)}));
+
+let picked=null,searchSeq=0,searchTimer;
+const addDrop=makeDrop($("in-link"),$("drop-add"),p=>{picked=p;$("in-link").value=p.title});
+const localSearch=q=>LOCAL.filter(g=>g.title.toLowerCase().includes(q.toLowerCase())).slice(0,8);
+const toItems=l=>l.map(p=>({img:cover(p.appId),alt:coverAlt(p.appId),title:p.title,sub:games.some(g=>g.appId===p.appId)?"schon in Liste":"App "+p.appId,data:p}));
+
+async function steamSearch(term){
+  const c=new AbortController(),t=setTimeout(()=>c.abort(),5000);
+  try{return(await cheapShark(term,c.signal)).slice(0,8)}finally{clearTimeout(t)}
+}
+$("in-link").addEventListener("input",()=>{
+  picked=null;clearTimeout(searchTimer);
+  const v=$("in-link").value.trim();
+  if(v.length<2||/^https?:\/\//i.test(v)){addDrop.close();return}
+  const seq=++searchSeq,loc=localSearch(v);
+  addDrop.show(toItems(loc),"Suche bei Steam …");
+  searchTimer=setTimeout(async()=>{
+    try{
+      const on=await steamSearch(v);
+      if(seq!==searchSeq)return;
+      if(on.length)addDrop.show(toItems(on),"Treffer von Steam");
+      else addDrop.show(toItems(loc),loc.length?"Keine Steam-Treffer, lokale Liste":"Keine Treffer: wird als Name ohne Cover gespeichert");
+    }catch(e){
+      if(seq!==searchSeq)return;
+      addDrop.show(toItems(loc),loc.length?"Steam-Suche nicht erreichbar, lokale Liste":"Steam-Suche nicht erreichbar: Name wird ohne Cover gespeichert");
+    }
+  },300);
+});
+$("in-link").addEventListener("keydown",e=>{if(e.key==="Enter"&&!e.defaultPrevented){addDrop.close();addGame()}});
+
+$("search").oninput=e=>{query=e.target.value;render()};
+
+function openEdit(id){
+  const g=games.find(x=>x.id===id);editId=id;editCats=new Set(g.cats);
+  $("e-title").value=g.title;
+  $("e-link").value=g.appId?`https://store.steampowered.com/app/${g.appId}/`:"";
+  $("e-status").innerHTML=statusOpts(g.status);
+  const r=()=>chips($("e-cats"),editCats,r);r();
+  $("dlg").showModal();
+}
+$("e-cancel").onclick=()=>$("dlg").close();
+$("e-save").onclick=()=>{
+  const g=games.find(x=>x.id===editId);
+  const t=$("e-title").value.trim();if(!t){toast("Titel fehlt");return}
+  const l=$("e-link").value.trim(),s=l?parseSteam(l):null;
+  if(l&&!s){toast("Ungültiger Steam-Link");return}
+  g.title=t;g.appId=s?s.appId:null;g.status=$("e-status").value;g.cats=CATS.filter(c=>editCats.has(c));
+  save();render();$("dlg").close();toast("Gespeichert");
+};
+
+$("btn-export").onclick=()=>{
+  const a=document.createElement("a");
+  a.href=URL.createObjectURL(new Blob([JSON.stringify(games,null,2)],{type:"application/json"}));
+  a.download=`steam-backlog-${new Date().toISOString().slice(0,10)}.json`;a.click();
+  setTimeout(()=>URL.revokeObjectURL(a.href),1000);
+};
+$("btn-import").onclick=()=>$("file").click();
+$("file").onchange=async e=>{
+  const f=e.target.files[0];if(!f)return;
+  try{
+    const data=JSON.parse(await f.text());
+    if(!Array.isArray(data))throw 0;
+    const clean=data.filter(g=>g&&typeof g.title==="string").map(g=>({
+      id:String(g.id||Date.now()+Math.random()),title:g.title,
+      appId:g.appId?String(g.appId).replace(/\D/g,"")||null:null,
+      cats:Array.isArray(g.cats)?g.cats.filter(c=>CATS.includes(c)):[],
+      status:STATUS[g.status]?g.status:"todo"}));
+    const merge=games.length&&confirm("OK = mit bestehender Liste zusammenführen\nAbbrechen = Liste ersetzen");
+    if(merge){const ids=new Set(games.map(g=>g.id));games=[...games,...clean.filter(g=>!ids.has(g.id))]}
+    else games=clean;
+    save();render();toast(`${clean.length} Spiele importiert`);
+  }catch(err){toast("Import fehlgeschlagen: ungültige JSON-Datei")}
+  e.target.value="";
+};
+
+$("in-status").innerHTML=statusOpts("todo");
+renderAddChips();renderFilters();render();
+</script>
+</body>
+</html>
