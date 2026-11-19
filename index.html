@@ -145,8 +145,8 @@ dialog input[type=text],dialog select{width:100%}
 <div class="toast" id="toast"></div>
 
 <script>
-const CATS=["Singleplayer","2-Spieler Koop","Mehrspieler Koop","Simulator","Cozy","Horror","Story"];
-const CATCOLOR={"Singleplayer":"#5b9dff","2-Spieler Koop":"#ff7ab8","Mehrspieler Koop":"#ff9f43","Simulator":"#2ed3a0","Cozy":"#f4c95d","Horror":"#ff5555","Story":"#b388ff"};
+const CATS=["Singleplayer","2-Spieler Koop","Mehrspieler Koop","PvP / Competitive","Shooter","Action","Abenteuer","Rollenspiel","Strategie","Survival","Simulator","Cozy","Horror","Story","Puzzle","Party","Sport & Rennen","Sonstiges"];
+const CATCOLOR={"Singleplayer":"#5b9dff","2-Spieler Koop":"#ff7ab8","Mehrspieler Koop":"#ff9f43","PvP / Competitive":"#22d3ee","Shooter":"#a3e635","Action":"#e879f9","Abenteuer":"#38bdf8","Rollenspiel":"#c49a6c","Strategie":"#8fa3b8","Survival":"#7fa07a","Simulator":"#2ed3a0","Cozy":"#f4c95d","Horror":"#ff5555","Story":"#b388ff","Puzzle":"#7c83ff","Party":"#ffa8d9","Sport & Rennen":"#ff8f6b","Sonstiges":"#9a9aa5"};
 const STATUS={todo:"Noch spielen",now:"Gerade dran",done:"Durchgespielt"};
 const KEY="steam-backlog-v1";
 let games=load(), fCats=new Set(), fStatus="", query="", addCats=new Set(), editCats=new Set(), editId=null;
